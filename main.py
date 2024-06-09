@@ -19,7 +19,7 @@ from pprint import pprint
 import torch
 import torchaudio
 from tqdm import tqdm
-from underthesea import sent_tokenize
+from underthesea import sent_tokenize, word_tokenize
 from unidecode import unidecode
 
 try:
@@ -87,17 +87,39 @@ def calculate_keep_len(text, lang):
 def normalize_vietnamese_text(text):
     text = (
         TTSnorm(text, unknown=False, lower=False, rule=True)
+        .replace("-", "")
+        .replace("...", ".")
         .replace("..", ".")
+        .replace(":.", ".")
         .replace("!.", "!")
         .replace("?.", "?")
         .replace(" .", ".")
         .replace(" ,", ",")
         .replace('"', "")
         .replace("'", "")
+        .replace("  ", " ")
         .replace("AI", "Ây Ai")
         .replace("A.I", "Ây Ai")
     )
     return text
+
+def merge_short_sentences(text):
+    sentences = sent_tokenize(text)
+    merged_sentences = []
+    i = 0
+
+    while i < len(sentences):
+        words = word_tokenize(sentences[i])
+        # Kiểm tra số lượng từ trong câu
+        if len(words) < 10 and i+1 < len(sentences):
+            # Gộp câu ngắn với câu kế tiếp
+            sentences[i+1] = sentences[i][:-1] + ', ' + sentences[i+1]
+        else:
+            # Nếu câu không ngắn, thêm nó vào danh sách các câu đã gộp
+            merged_sentences.append(sentences[i])
+        i += 1
+
+    return merged_sentences
 
 
 def run_tts(XTTS_MODEL, lang, tts_text, speaker_audio_file,
@@ -142,7 +164,7 @@ def run_tts(XTTS_MODEL, lang, tts_text, speaker_audio_file,
     if lang in ["ja", "zh-cn"]:
         tts_texts = tts_text.split("。")
     else:
-        tts_texts = sent_tokenize(tts_text)
+        tts_texts = merge_short_sentences(tts_text)
 
     if verbose:
         print("Text for TTS:")
