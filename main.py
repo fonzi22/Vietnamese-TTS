@@ -103,21 +103,36 @@ def normalize_vietnamese_text(text):
     )
     return text
 
-def merge_short_sentences(text):
+def split_long_sentence(words, max_tokens=100):
+    sentences = []
+    current_sentence = []
+
+    for word in words:
+        current_sentence.append(word)
+        if len(current_sentence) >= max_tokens:
+            sentences.append(' '.join(current_sentence) + ".")
+            current_sentence = []
+    
+    if current_sentence:
+        sentences.append(' '.join(current_sentence) )
+    
+    return sentences
+
+def merge_and_split_sentences(text):
     sentences = sent_tokenize(text)
     merged_sentences = []
     i = 0
 
     while i < len(sentences):
-        words = word_tokenize(sentences[i])
-        # Kiểm tra số lượng từ trong câu
-        if len(words) < 10 and i+1 < len(sentences):
-            # Gộp câu ngắn với câu kế tiếp
-            sentences[i+1] = sentences[i][:-1] + ', ' + sentences[i+1]
-        else:
-            # Nếu câu không ngắn, thêm nó vào danh sách các câu đã gộp
-            merged_sentences.append(sentences[i])
-        i += 1
+      words = word_tokenize(sentences[i])
+      if len(word_tokenize(sentences[i])) > 100:
+          merged_sentences.extend(split_long_sentence(words))
+      else:
+          if len(words) < 10 and i+1 < len(sentences):
+              sentences[i+1] = sentences[i][:-1] + ', ' + sentences[i+1]
+          else:
+              merged_sentences.append(sentences[i])
+      i += 1
 
     return merged_sentences
 
@@ -164,7 +179,7 @@ def run_tts(XTTS_MODEL, lang, tts_text, speaker_audio_file,
     if lang in ["ja", "zh-cn"]:
         tts_texts = tts_text.split("。")
     else:
-        tts_texts = merge_short_sentences(tts_text)
+        tts_texts = merge_and_split_sentences(tts_text)
 
     if verbose:
         print("Text for TTS:")
