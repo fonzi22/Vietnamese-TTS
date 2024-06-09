@@ -219,7 +219,8 @@ while True:
   else:
     print("Lựa chọn không phù hợp. Hãy chọn lại.")
     continue
-  input_text = input("Nhập đoạn văn bản cần chuyển ( Độ dài tối thiểu mỗi câu nên từ 10 từ để đặt kết quả tốt nhất.):")
+  with open('input.txt', encoding='utf-8') as f:
+    input_text = f.read()
   print("> Đang chuyển đổi...")
   audio_file = run_tts(vixtts_model,
           lang=language,
