@@ -15,7 +15,8 @@ def install_packages():
         'unidecode',
         'numpy',
         'huggingface-hub',
-        'faster_whisper'
+        'faster_whisper',
+        'fasttext'
     ]
     for package in packages:
         subprocess.check_call([os.sys.executable, "-m", "pip", "install", package, "--use-deprecated=legacy-resolver"])
